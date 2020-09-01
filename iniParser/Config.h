@@ -1,19 +1,14 @@
 #pragma once
 
-#include <map>
 #include <string>
 
-class AppConfig
+class Config
 {
 private:
-	std::map<std::string, std::string> configData;
-
 	std::string configFile;
-
-	void writeToConfig();
-	void parseConfigData();
+	std::string tempConfigFile;
 public:
-	AppConfig(std::string configFilePath);
+	Config(std::string configFileName, std::string tempConfigFileName);
 
 	void addToConfig(std::string property, std::string setting);
 	std::string readConfigData(std::string property);

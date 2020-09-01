@@ -3,17 +3,14 @@
 
 #include <iostream>
 
-#include "AppConfig.h"
+#include "Config.h"
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    Config cfg("Config.ini", "tempConfig.ini");
+    
+    std::string a = cfg.readConfigData("asdwww");
 
-    AppConfig cfg("Config.ini");
-
-    cfg.addToConfig("propertyExample", "SettingExample");
-
-    //cfg.addToConfig("property", "setting");
-    //cfg.readConfigData("property");
+       std::cout << a << std::endl;
 }
 
