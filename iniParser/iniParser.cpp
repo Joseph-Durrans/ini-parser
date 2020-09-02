@@ -9,8 +9,18 @@ int main()
 {
     Config cfg("Config.ini", "tempConfig.ini");
     
-    std::string a = cfg.readConfigData("asdwww");
+    cfg.addToConfig("wwwww", "AAAA", "popop");
 
-       std::cout << a << std::endl;
+
+    //cfg.addCategory("firstcat");
+
+    //std::map<std::string, std::string> propertiesAndSettings = cfg.getCategoryData("firstcat");
+
+    //std::map<std::string, std::string>::iterator it;
+    //for (it = propertiesAndSettings.begin(); it != propertiesAndSettings.end(); it++)
+    //{
+    //    std::cout << it->first << "=" << it->second << std::endl;
+    //}
+
 }
 

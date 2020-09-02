@@ -143,12 +143,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AppConfig.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="iniParser.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AppConfig.h" />
     <ClInclude Include="Config.h" />
   </ItemGroup>
   <ItemGroup>
