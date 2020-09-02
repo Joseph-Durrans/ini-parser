@@ -9,10 +9,10 @@ int main()
 {
     Config cfg("Config.ini", "tempConfig.ini");
     
-    cfg.addToConfig("wwwww", "AAAA", "popop");
 
+    cfg.addToConfig("firstprop4", "firstset4", "firstcat");
 
-    //cfg.addCategory("firstcat");
+    //std::cout << cfg.readConfigData("firstprop4", "firstcat") << std::endl;
 
     //std::map<std::string, std::string> propertiesAndSettings = cfg.getCategoryData("firstcat");
 
