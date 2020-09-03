@@ -10,17 +10,89 @@ int main()
     Config cfg("Config.ini", "tempConfig.ini");
     
 
-    cfg.addToConfig("firstprop4", "firstset4", "firstcat");
+    while (true)
+    {
+        int option = 0;
 
-    //std::cout << cfg.readConfigData("firstprop4", "firstcat") << std::endl;
+        std::cout << "0. Get All Data" << std::endl;
+        std::cout << "1. Get Category Data" << std::endl;
+        std::cout << "2. Read Property Data" << std::endl;
+        std::cout << "3. Add to ini File" << std::endl;
 
-    //std::map<std::string, std::string> propertiesAndSettings = cfg.getCategoryData("firstcat");
+        std::cin >> option;
 
-    //std::map<std::string, std::string>::iterator it;
-    //for (it = propertiesAndSettings.begin(); it != propertiesAndSettings.end(); it++)
-    //{
-    //    std::cout << it->first << "=" << it->second << std::endl;
-    //}
+        switch (option)
+        {
+        case 0: {
+            std::map<std::string, std::map<std::string, std::string>> data = cfg.getAllData();
 
+            std::map<std::string, std::map<std::string, std::string>>::iterator it;
+
+            for (it = data.begin(); it != data.end(); it++)
+            {
+                std::map<std::string, std::string>::iterator innerIt;
+
+                std::cout << it->first << ":" << std::endl;
+                for (innerIt = it->second.begin(); innerIt != it->second.end(); innerIt++)
+                {
+                    std::cout << "  " << innerIt->first << "=" << innerIt->second << std::endl;
+                }
+            }
+            std::cout << std::endl;
+            break;
+        }
+
+        case 1: {
+            std::string cat;
+
+            std::cout << "Enter Category Name" << std::endl;
+            std::cin >> cat;
+
+            std::map<std::string, std::string> data = cfg.getCategoryData(cat);
+
+            std::map<std::string, std::string>::iterator it;
+
+            for (it = data.begin(); it != data.end(); it++)
+            {
+                std::cout << it->first << "=" << it->second << std::endl;
+            }
+            std::cout << std::endl;
+            break;
+        }
+
+        case 2: {
+            std::string prop;
+            std::string cat;
+
+            std::cout << "Enter Property Name" << std::endl;
+            std::cin >> prop;
+            std::cout << "Enter Category Name" << std::endl;
+            std::cin >> cat;
+
+            std::cout << cfg.readPropertyData(prop, cat) << std::endl;
+            break;
+        }
+
+        case 3: {
+            std::string prop;
+            std::string set;
+            std::string cat;
+
+            std::cout << "Enter Property Name" << std::endl;
+            std::cin >> prop;
+            std::cout << "Enter Setting Name" << std::endl;
+            std::cin >> set;
+            std::cout << "Enter Category" << std::endl;
+            std::cin >> cat;
+
+            cfg.addToConfig(prop, set, cat);
+            std::cout << std::endl;
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
 }
 

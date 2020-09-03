@@ -33,9 +33,9 @@ void Config::addToConfig(std::string property, std::string setting, std::string 
 		{
 			if (line.find(amendedCategory) != std::string::npos)
 			{
-				std::cout << "found cat" << std::endl;
 				writer << line << std::endl;
 				foundCat = true;
+				startOfFile = false;
 				continue;
 			}
 
@@ -44,13 +44,10 @@ void Config::addToConfig(std::string property, std::string setting, std::string 
 				std::size_t findValue = line.find('=') + 1;
 				line.replace(findValue, line.length() - findValue, setting);
 				replaced = true;
-				std::cout << "replaced" << std::endl;
 			}
-
-			if (line.find("[") != std::string::npos && foundCat && !replaced && !startOfFile)
+			else if (line.find("[") != std::string::npos && foundCat && !replaced && !startOfFile)
 			{
 				writer << property << "=" << setting << std::endl;
-				std::cout << "added to end" << std::endl;
 			}
 
 			startOfFile = false;
@@ -76,8 +73,6 @@ void Config::addToConfig(std::string property, std::string setting, std::string 
 
 std::map<std::string, std::string> Config::getCategoryData(std::string category)
 {
-	//fix output
-
 	if (std::filesystem::exists(configFile))
 	{
 		std::map<std::string, std::string> propertiesAndSettings;
@@ -100,7 +95,7 @@ std::map<std::string, std::string> Config::getCategoryData(std::string category)
 				inCat = true;
 				continue;
 			}
-			else if (line.find("[") != std::string::npos)
+			else if (line.find("[") != std::string::npos && inCat)
 			{
 				inCat = false;
 				break;
@@ -110,11 +105,10 @@ std::map<std::string, std::string> Config::getCategoryData(std::string category)
 			{
 				std::size_t findValue = line.find('=') + 1;
 				std::size_t findKey = 0;
-				std::string foundProperty = line.substr(findKey, line.find('=') - 1);
+				std::string foundProperty = line.substr(findKey, line.find('='));
 				std::string foundSetting = line.substr(findValue, line.length() - findValue);
 				propertiesAndSettings.insert(std::pair<std::string, std::string>(foundProperty, foundSetting));
 			}
-			std::cout << "looped" << std::endl;
 		}
 
 		reader.close();
@@ -122,9 +116,39 @@ std::map<std::string, std::string> Config::getCategoryData(std::string category)
 		return propertiesAndSettings;
 	}
 }
-	
 
-std::string Config::readConfigData(std::string property, std::string category)
+std::map<std::string, std::map<std::string, std::string>> Config::getAllData()
+{
+	if (std::filesystem::exists(configFile))
+	{
+		std::ifstream reader(configFile);
+
+		std::map<std::string, std::map<std::string, std::string>> maps;
+
+		std::string line;
+
+		while (std::getline(reader, line) >> std::ws)
+		{
+			if (line.find("[") != std::string::npos)
+			{
+				std::string foundProperty = line.substr(1, line.length() - 2);
+				std::map<std::string, std::string> map = getCategoryData(foundProperty);
+
+				std::map<std::string, std::string>::iterator it;
+				for (it = map.begin(); it != map.end(); it++)
+				{
+					maps[foundProperty].insert(std::pair<std::string, std::string>(it->first, it->second));	
+				}
+			}
+		}
+
+		reader.close();
+
+		return maps;
+	}
+}
+
+std::string Config::readPropertyData(std::string property, std::string category)
 {
 	if (std::filesystem::exists(configFile))
 	{
