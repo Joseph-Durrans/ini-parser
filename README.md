@@ -24,5 +24,15 @@ If the property already exists within the category it will replace the setting w
 
 ```c++
 std::string readPropertyData(std::string property, std::string category);
-
 ```
+Input the property and the category and it will return the setting found.
+
+```c++
+std::map<std::string, std::string> getCategoryData(std::string category);
+```
+Input the category and its properties and setting will be returned in a map.
+
+```c++
+std::map<std::string, std::map<std::string, std::string>> getAllData();
+```
+Returns a map with all the data. The category is the key and a map of the properties and settings is the value.
