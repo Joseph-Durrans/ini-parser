@@ -1,5 +1,4 @@
 #include <iostream>
-#include <filesystem>
 #include <fstream>
 #include <stdio.h>
 #include <sstream>
@@ -8,178 +7,173 @@
 
 Config::Config(std::string configFileName, std::string tempConfigFileName)
 {
-	configFile = configFileName;
-	tempConfigFile = tempConfigFileName;
+	std::stringstream nameStream;
+	nameStream << configFileName << ".ini";	
+	std::string amendedConfigFileName = nameStream.str();
+
+	std::stringstream tempNameStream;
+	tempNameStream << tempConfigFileName << ".ini";
+	std::string amendedTempConfigFileName = tempNameStream.str();
+
+	configFile = amendedConfigFileName;
+	tempConfigFile = amendedTempConfigFileName;
 }
 
 void Config::addToConfig(std::string property, std::string setting, std::string category)
 {
-	if (std::filesystem::exists(configFile))
+	std::ifstream reader(configFile);
+	std::ofstream writer(tempConfigFile);
+
+	bool foundCat = false;
+	bool foundCatOnce = false;
+	bool replaced = false;
+	bool startOfFile = true;
+
+	std::stringstream ss;
+	ss << "[" << category << "]";
+	std::string amendedCategory = ss.str();
+
+	std::string line;
+
+	while (std::getline(reader, line) >> std::ws)
 	{
-		std::ifstream reader(configFile);
-		std::ofstream writer(tempConfigFile);
-
-		bool foundCat = false;
-		bool replaced = false;
-		bool startOfFile = true;
-
-		std::stringstream ss;
-		ss << "[" << category << "]";
-		std::string amendedCategory = ss.str();
-
-		std::string line;
-
-		while (std::getline(reader, line) >> std::ws)
+		if (line.find(amendedCategory) != std::string::npos)
 		{
-			if (line.find(amendedCategory) != std::string::npos)
-			{
-				writer << line << std::endl;
-				foundCat = true;
-				startOfFile = false;
-				continue;
-			}
-
-			if (line.find(property) != std::string::npos && foundCat)
-			{
-				std::size_t findValue = line.find('=') + 1;
-				line.replace(findValue, line.length() - findValue, setting);
-				replaced = true;
-			}
-			else if (line.find("[") != std::string::npos && foundCat && !replaced && !startOfFile)
-			{
-				writer << property << "=" << setting << std::endl;
-			}
-
-			startOfFile = false;
 			writer << line << std::endl;
+			foundCat = true;
+			foundCatOnce = true;
+			startOfFile = false;
+			continue;
 		}
 
-		if (!foundCat)
+		if (line.find(property) != std::string::npos && foundCat)
 		{
-			writer << amendedCategory << std::endl;
+			std::size_t findValue = line.find('=') + 1;
+			line.replace(findValue, line.length() - findValue, setting);
+			replaced = true;
+			foundCat = false;
+		}
+		else if (line.find("[") != std::string::npos && foundCat && !replaced && !startOfFile || foundCat && !replaced && !startOfFile && reader.eof())
+		{
 			writer << property << "=" << setting << std::endl;
+			foundCat = false;
 		}
 
-		reader.close();
-		writer.close();
+		startOfFile = false;
+		writer << line << std::endl;
+	}
 
-		remove(configFile.c_str());
-		if (rename(tempConfigFile.c_str(), configFile.c_str()))
-		{
-			std::cout << "File Re-Written" << std::endl;
-		}
+	if (!foundCatOnce)
+	{
+		writer << amendedCategory << std::endl;
+		writer << property << "=" << setting << std::endl;
+	}
+
+	reader.close();
+	writer.close();
+
+	remove(configFile.c_str());
+	if (rename(tempConfigFile.c_str(), configFile.c_str()))
+	{
+		std::cout << "File Re-Written" << std::endl;
 	}
 }
 
 std::map<std::string, std::string> Config::getCategoryData(std::string category)
 {
-	if (std::filesystem::exists(configFile))
+	std::map<std::string, std::string> propertiesAndSettings;
+
+	std::ifstream reader(configFile);
+
+	bool inCat = false;
+
+	std::stringstream ss;
+	ss << "[" << category << "]";
+	std::string amendedCategory = ss.str();
+
+	std::string line;
+
+	while (std::getline(reader, line) >> std::ws)
 	{
-		std::map<std::string, std::string> propertiesAndSettings;
 
-		std::ifstream reader(configFile);
-
-		bool inCat = false;
-
-		std::stringstream ss;
-		ss << "[" << category << "]";
-		std::string amendedCategory = ss.str();
-
-		std::string line;
-
-		while (std::getline(reader, line) >> std::ws)
+		if (line.find(amendedCategory) != std::string::npos)
 		{
-
-			if (line.find(amendedCategory) != std::string::npos)
-			{
-				inCat = true;
-				continue;
-			}
-			else if (line.find("[") != std::string::npos && inCat)
-			{
-				inCat = false;
-				break;
-			}
-
-			if (inCat)
-			{
-				std::size_t findValue = line.find('=') + 1;
-				std::size_t findKey = 0;
-				std::string foundProperty = line.substr(findKey, line.find('='));
-				std::string foundSetting = line.substr(findValue, line.length() - findValue);
-				propertiesAndSettings.insert(std::pair<std::string, std::string>(foundProperty, foundSetting));
-			}
+			inCat = true;
+			continue;
+		}
+		else if (line.find("[") != std::string::npos && inCat)
+		{
+			inCat = false;
+			break;
 		}
 
-		reader.close();
-
-		return propertiesAndSettings;
+		if (inCat)
+		{
+			std::size_t findValue = line.find('=') + 1;
+			std::size_t findKey = 0;
+			std::string foundProperty = line.substr(findKey, line.find('='));
+			std::string foundSetting = line.substr(findValue, line.length() - findValue);
+			propertiesAndSettings.insert(std::pair<std::string, std::string>(foundProperty, foundSetting));
+		}
 	}
+
+	reader.close();
+
+	return propertiesAndSettings;
 }
 
 std::map<std::string, std::map<std::string, std::string>> Config::getAllData()
 {
-	if (std::filesystem::exists(configFile))
+	std::ifstream reader(configFile);
+
+	std::map<std::string, std::map<std::string, std::string>> maps;
+
+	std::string line;
+
+	while (std::getline(reader, line) >> std::ws)
 	{
-		std::ifstream reader(configFile);
-
-		std::map<std::string, std::map<std::string, std::string>> maps;
-
-		std::string line;
-
-		while (std::getline(reader, line) >> std::ws)
+		if (line.find("[") != std::string::npos)
 		{
-			if (line.find("[") != std::string::npos)
-			{
-				std::string foundProperty = line.substr(1, line.length() - 2);
-				std::map<std::string, std::string> map = getCategoryData(foundProperty);
-
-				std::map<std::string, std::string>::iterator it;
-				for (it = map.begin(); it != map.end(); it++)
-				{
-					maps[foundProperty].insert(std::pair<std::string, std::string>(it->first, it->second));	
-				}
-			}
+			std::string foundProperty = line.substr(1, line.length() - 2);
+			std::map<std::string, std::string> map = getCategoryData(foundProperty);
+			maps[foundProperty].insert(map.begin(), map.end());	
 		}
-
-		reader.close();
-
-		return maps;
 	}
+
+	reader.close();
+
+	return maps;
 }
 
 std::string Config::readPropertyData(std::string property, std::string category)
 {
-	if (std::filesystem::exists(configFile))
+	std::ifstream reader(configFile);
+
+	bool foundCat = false;
+
+	std::stringstream ss;
+	ss << "[" << category << "]";
+	std::string amendedCategory = ss.str();
+
+	std::string line;
+
+	while (std::getline(reader, line) >> std::ws)
 	{
-		std::ifstream reader(configFile);
-
-		bool foundCat = false;
-
-		std::stringstream ss;
-		ss << "[" << category << "]";
-		std::string amendedCategory = ss.str();
-
-		std::string line;
-
-		while (std::getline(reader, line) >> std::ws)
+		if (line.find(amendedCategory) != std::string::npos)
 		{
-			if (line.find(amendedCategory) != std::string::npos)
-			{
-				foundCat = true;
-				continue;
-			}
-
-			if (line.find(property) != std::string::npos && foundCat)
-			{
-				std::size_t findValue = line.find('=') + 1;
-				std::string foundPropertySetting = line.substr(findValue, line.length() - findValue);
-				return foundPropertySetting;
-			}
+			foundCat = true;
+			continue;
 		}
 
-		reader.close();
-
-		return "Property Not Found";
+		if (line.find(property) != std::string::npos && foundCat)
+		{
+			std::size_t findValue = line.find('=') + 1;
+			std::string foundPropertySetting = line.substr(findValue, line.length() - findValue);
+			return foundPropertySetting;
+		}
 	}
+
+	reader.close();
+
+	return "Property Not Found";
 }

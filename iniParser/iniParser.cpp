@@ -7,9 +7,17 @@
 
 int main()
 {
-    Config cfg("Config.ini", "tempConfig.ini");
-    
 
+    std::string fileName;
+    std::string tempFileName;
+
+    std::cout << "Enter Config File Name" << std::endl;
+    std::cin >> fileName;
+    std::cout << "Enter Temp File Name" << std::endl;
+    std::cin >> tempFileName;
+
+    Config cfg(fileName, tempFileName);
+    
     while (true)
     {
         int option = 0;
