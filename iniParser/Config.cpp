@@ -5,7 +5,69 @@
 
 #include "Config.h"
 
-Config::Config(std::string configFileName, std::string tempConfigFileName)
+bool Config::propFinder(std::string& line, std::string& property)
+{
+	int characters = 0;
+	std::string foundProperty;
+
+	for (char& c : line)
+	{
+		if (c == '=')
+		{
+			break;
+		}
+
+		foundProperty += c;
+		++characters;
+	}
+
+	if (characters == property.length())
+	{
+		if (foundProperty == property)
+		{
+			std::cout << "found" << std::endl;
+			return true;
+		}
+	}
+	
+	std::cout << "not found" << std::endl;
+	return false;
+}
+
+bool Config::catFinder(std::string& line, std::string& category)
+{
+	int characters = 0;
+	std::string foundCategory;
+
+	for (char& c : line){
+	
+		if (c == '[')
+		{
+			continue;
+		}
+		else if(c == ']')
+		{
+			break;
+		}
+
+		foundCategory += c;
+		++characters;
+	}
+
+	if (characters == category.length())
+	{
+		if (foundCategory == category)
+		{
+			std::cout << "found" << std::endl;
+			return true;
+		}
+	}
+	std::cout << "not found" << std::endl;
+	return false;
+}
+
+
+Config::Config(std::string& configFileName, std::string& tempConfigFileName)
 {
 	std::stringstream nameStream;
 	nameStream << configFileName << ".ini";	
@@ -19,7 +81,7 @@ Config::Config(std::string configFileName, std::string tempConfigFileName)
 	tempConfigFile = amendedTempConfigFileName;
 }
 
-void Config::addToConfig(std::string property, std::string setting, std::string category)
+void Config::addToConfig(std::string& property, std::string& setting, std::string& category)
 {
 	std::ifstream reader(configFile);
 	std::ofstream writer(tempConfigFile);
@@ -79,7 +141,7 @@ void Config::addToConfig(std::string property, std::string setting, std::string 
 	}
 }
 
-std::map<std::string, std::string> Config::getCategoryData(std::string category)
+std::map<std::string, std::string> Config::getCategoryData(std::string& category)
 {
 	std::map<std::string, std::string> propertiesAndSettings;
 
@@ -145,7 +207,26 @@ std::map<std::string, std::map<std::string, std::string>> Config::getAllData()
 	return maps;
 }
 
-std::string Config::readPropertyData(std::string property, std::string category)
+std::string Config::readCat(std::ifstream& reader, std::string& line, std::string& property)
+{
+	while (std::getline(reader, line) >> std::ws)
+	{
+		if (line.find(property) != std::string::npos)
+		{
+			std::size_t findValue = line.find('=') + 1;
+			std::string foundPropertySetting = line.substr(findValue, line.length() - findValue);
+			return foundPropertySetting;
+		}
+		else if (line.find("[") != std::string::npos)
+		{
+			break;
+		}
+	}
+
+	return "Property Not Found";
+}
+
+std::string Config::readPropertyData(std::string& property, std::string& category)
 {
 	std::ifstream reader(configFile);
 
@@ -157,23 +238,19 @@ std::string Config::readPropertyData(std::string property, std::string category)
 
 	std::string line;
 
+	std::string response = "No Category Found";
+
 	while (std::getline(reader, line) >> std::ws)
 	{
 		if (line.find(amendedCategory) != std::string::npos)
 		{
-			foundCat = true;
-			continue;
-		}
-
-		if (line.find(property) != std::string::npos && foundCat)
-		{
-			std::size_t findValue = line.find('=') + 1;
-			std::string foundPropertySetting = line.substr(findValue, line.length() - findValue);
-			return foundPropertySetting;
+			response = readCat(reader, line, property);
+			break;
 		}
 	}
 
 	reader.close();
 
-	return "Property Not Found";
+	return response;
 }
+

@@ -4,7 +4,13 @@
 
 int main()
 {
-    std::string fileName;
+
+    std::string prop = "[asdaaa]";
+    std::string find = "asd";
+    Config::catFinder(prop, find);
+
+
+ /*   std::string fileName;
     std::string tempFileName;
 
     std::cout << "Enter Config File Name" << std::endl;
@@ -97,6 +103,6 @@ int main()
         default:
             break;
         }
-    }
+    }*/
 }
 
